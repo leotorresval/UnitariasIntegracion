@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import market.model.Category;
 import market.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,8 +35,14 @@ public class CategoryRest {
     }
     
     @GetMapping("{id}")
-    public ResponseEntity<Category> getById(@PathVariable long id){
-        return ResponseEntity.ok(categoryService.getById(id));
+    public ResponseEntity<?> getById(@PathVariable long id){
+        Category c = categoryService.getById(id);
+        if(c!=null)
+            return ResponseEntity.ok(c);
+        else{
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Categoria no encontrada");
+        }
     }
     
     @DeleteMapping("{id}")

@@ -19,23 +19,23 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 public class CategoryServiceTest {
-    
+
     @Mock
     private CategoryRepository categoryRepository;
-    
+
     @InjectMocks
     private CategoryService categoryService;
-    
+
     public CategoryServiceTest() {
     }
 
-    public Category create(long id){
+    public Category create(long id) {
         Category c = new Category();
         c.setId(id);
         c.setName("Test");
         return c;
     }
-    
+
     @Test
     public void testSave() {
         Category c = create(1L);
@@ -43,7 +43,7 @@ public class CategoryServiceTest {
         Category result = categoryService.save(c);
         assertEquals(c.getName(), result.getName());
         verify(categoryRepository).save(c);
-        
+
     }
 
     @Test
@@ -52,30 +52,34 @@ public class CategoryServiceTest {
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(c));
         Category result = categoryService.getById(1L);
         assertEquals(c.getName(), result.getName());
-        
+
     }
 
     @Test
     public void testGetAll() {
-        Category c1 =create(1);
-        Category c2 =create(2);
-        List<Category> l = List.of(c1,c2);
+        Category c1 = create(1);
+        Category c2 = create(2);
+        List<Category> l = List.of(c1, c2);
         when(categoryRepository.findAll()).thenReturn(l);
         List<Category> result = categoryService.getAll();
         assertNotNull(result);
         assertEquals(l.size(), result.size());
-        
+
     }
 
     @Test
     public void testDelete() {
+        Category c = create(1);
+        Mockito.doNothing().when(categoryRepository).delete(any(Category.class));
+        categoryService.delete(c);
+        verify(categoryRepository, Mockito.times(1)).delete(any(Category.class));
     }
 
     @Test
     public void testDeleteById() {
         Mockito.doNothing().when(categoryRepository).deleteById(1L);
         categoryService.deleteById(1L);
-        verify(categoryRepository,Mockito.times(1)).deleteById(1L);
+        verify(categoryRepository, Mockito.times(1)).deleteById(1L);
     }
-    
+
 }
