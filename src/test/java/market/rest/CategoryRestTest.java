@@ -1,6 +1,7 @@
 package market.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import market.model.Category;
 import market.service.CategoryService;
 import org.junit.jupiter.api.Test;
@@ -43,12 +44,33 @@ public class CategoryRestTest {
         mockMvc.perform(post("/category/")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(c)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Test"));
     }
 
     @Test
-    public void testGetAll() {
+    public void testSave_InternalServerError() throws Exception {
+        Category c = create(1L);
+        doThrow(new RuntimeException("Exception"))
+                .when(categoryService).save(any(Category.class));
+
+        mockMvc.perform(post("/category/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(c)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Error"));
+    }
+
+
+    @Test
+    public void testGetAll() throws Exception {
+        Category c1 = create(1);
+        Category c2 = create(2);
+        when(categoryService.getAll()).thenReturn(List.of(c1, c2));
+        mockMvc.perform(get("/category/"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value("1"));
+
     }
 
     @Test
@@ -70,7 +92,22 @@ public class CategoryRestTest {
     }
 
     @Test
-    public void testDeleteById() {
+    public void testDeleteById() throws Exception {
+        Category c = create(1);
+        when(categoryService.getById(anyLong())).thenReturn(c);
+        doNothing().when(categoryService).deleteById(anyLong());
+        mockMvc.perform(delete("/category/1"))
+                .andExpect(status().isOk());
+        verify(categoryService).deleteById(anyLong());
+    }
+    
+    @Test
+    public void testDeleteByIdNotFound()throws Exception{
+        Category c = create(1);
+        when(categoryService.getById(anyLong())).thenReturn(null);
+        mockMvc.perform(delete("/category/1"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Categoria no encontrada"));
     }
 
 }
